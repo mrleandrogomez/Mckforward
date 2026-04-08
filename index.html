@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forward — Mi Cuaderno de Aprendizaje</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1450F5;--blue-dark:#0D3BB8;--blue-light:#E8EEFF;
+  --accent:#FF6B35;--accent-light:#FFF0E8;
+  --ink:#111;--ink-light:#555;--ink-muted:#999;
+  --bg:#FAFAF8;--card:#FFFFFF;--border:#E8E8E4;
+  --success:#22C55E;--success-bg:#F0FDF4;
+  --radius:14px;--shadow:0 2px 20px rgba(0,0,0,0.06);
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;min-height:100vh}
+h1,h2,h3,h4{font-family:'Playfair Display',serif;font-weight:700;line-height:1.2}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Auth Screen */
+.auth-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--blue);position:relative;overflow:hidden}
+.auth-screen::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:rgba(255,107,53,0.15);filter:blur(80px)}
+.auth-screen::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;border-radius:50%;background:rgba(255,255,255,0.05);filter:blur(60px)}
+.auth-card{background:var(--card);border-radius:24px;padding:48px 40px;width:90%;max-width:440px;position:relative;z-index:1;box-shadow:0 25px 80px rgba(0,0,0,0.3)}
+.auth-brand{text-align:center;margin-bottom:36px}
+.auth-brand h1{font-size:2rem;color:var(--blue);margin-bottom:4px}
+.auth-brand p{color:var(--ink-muted);font-size:0.9rem;font-weight:300}
+.auth-tabs{display:flex;gap:4px;background:var(--blue-light);border-radius:10px;padding:4px;margin-bottom:28px}
+.auth-tab{flex:1;padding:10px;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;color:var(--blue);border-radius:8px;cursor:pointer;transition:all .2s}
+.auth-tab.active{background:var(--blue);color:#fff}
+.form-group{margin-bottom:18px}
+.form-group label{display:block;font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);margin-bottom:6px}
+.form-group input{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.95rem;transition:border .2s;background:var(--bg)}
+.form-group input:focus{outline:none;border-color:var(--blue)}
+.auth-btn{width:100%;padding:14px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;margin-top:8px}
+.auth-btn:hover{background:var(--blue-dark);transform:translateY(-1px)}
+.auth-error{background:#FEF2F2;color:#DC2626;padding:10px 14px;border-radius:8px;font-size:0.85rem;margin-bottom:14px;display:none}
+.auth-error.show{display:block}
+
+/* Main App Layout */
+.app-layout{display:flex;min-height:100vh}
+.sidebar{width:280px;background:var(--blue);color:#fff;padding:24px 0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s}
+.sidebar-brand{padding:0 24px;margin-bottom:32px}
+.sidebar-brand h2{font-size:1.3rem;font-weight:800}
+.sidebar-brand span{font-size:0.75rem;opacity:0.6;font-weight:300;display:block;margin-top:2px}
+.sidebar-progress{padding:0 24px;margin-bottom:28px}
+.progress-bar-wrap{background:rgba(255,255,255,0.15);border-radius:20px;height:8px;overflow:hidden;margin-top:8px}
+.progress-bar-fill{height:100%;background:var(--accent);border-radius:20px;transition:width .5s ease}
+.progress-label{font-size:0.75rem;opacity:0.7;display:flex;justify-content:space-between}
+.sidebar-nav{flex:1;overflow-y:auto;padding:0 12px}
+.nav-section{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;opacity:0.4;padding:12px 12px 6px;font-weight:600}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all .15s;font-size:0.88rem;font-weight:400;position:relative}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-item.active{background:rgba(255,255,255,0.18);font-weight:600}
+.nav-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);flex-shrink:0;transition:background .3s}
+.nav-dot.done{background:var(--success)}
+.nav-dot.current{background:var(--accent)}
+.sidebar-user{padding:16px 24px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:12px;margin-top:auto}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem}
+.user-info{flex:1;min-width:0}
+.user-info p{font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-info span{font-size:0.7rem;opacity:0.5}
+.logout-btn{background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:1.1rem;padding:4px;transition:color .2s}
+.logout-btn:hover{color:#fff}
+
+.main-content{margin-left:280px;flex:1;padding:32px 40px;max-width:900px}
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;background:var(--blue);color:#fff;padding:14px 20px;z-index:90;align-items:center;justify-content:space-between}
+.hamburger{background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:95}
+.overlay.show{display:block}
+
+/* Page Header */
+.page-header{margin-bottom:36px}
+.page-header .breadcrumb{font-size:0.8rem;color:var(--ink-muted);margin-bottom:8px;font-weight:500}
+.page-header h1{font-size:2.2rem;color:var(--ink)}
+.page-header p{color:var(--ink-light);margin-top:8px;font-size:0.95rem;max-width:600px}
+
+/* Cards */
+.exercise-card{background:var(--card);border-radius:var(--radius);padding:32px;box-shadow:var(--shadow);margin-bottom:24px;border:1px solid var(--border);position:relative;overflow:hidden}
+.exercise-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--blue)}
+.exercise-card.saved::before{background:var(--success)}
+.exercise-card h3{font-size:1.2rem;margin-bottom:6px}
+.exercise-card .exercise-desc{color:var(--ink-light);font-size:0.9rem;margin-bottom:20px;line-height:1.7}
+.exercise-card textarea{width:100%;min-height:140px;border:2px solid var(--border);border-radius:10px;padding:14px 16px;font-family:'DM Sans',sans-serif;font-size:0.92rem;line-height:1.7;resize:vertical;transition:border .2s;background:var(--bg)}
+.exercise-card textarea:focus{outline:none;border-color:var(--blue)}
+.exercise-card textarea::placeholder{color:var(--ink-muted)}
+.save-indicator{display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--ink-muted);margin-top:10px;transition:all .3s}
+.save-indicator.saved{color:var(--success)}
+.save-indicator svg{width:14px;height:14px}
+
+/* Likert Scale */
+.likert-grid{display:flex;flex-direction:column;gap:16px}
+.likert-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg);border-radius:10px}
+.likert-label{flex:1;font-size:0.88rem;min-width:200px}
+.likert-options{display:flex;gap:8px}
+.likert-opt{width:36px;height:36px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:600;cursor:pointer;transition:all .2s;background:var(--card);color:var(--ink-muted)}
+.likert-opt:hover{border-color:var(--blue);color:var(--blue)}
+.likert-opt.selected{background:var(--blue);border-color:var(--blue);color:#fff}
+.likert-legend{display:flex;justify-content:space-between;font-size:0.7rem;color:var(--ink-muted);padding:0 16px;margin-bottom:8px}
+
+/* Battery */
+.battery-grid{display:grid;gap:10px}
+.battery-item{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--bg);border-radius:10px;cursor:pointer;transition:all .15s;user-select:none}
+.battery-item:hover{background:var(--blue-light)}
+.battery-item.checked{background:var(--success-bg)}
+.battery-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.battery-item.checked .battery-check{background:var(--success);border-color:var(--success)}
+.battery-text{font-size:0.9rem}
+.battery-score{text-align:center;margin-top:16px;padding:20px;background:var(--blue-light);border-radius:12px}
+.battery-score .score{font-family:'Playfair Display',serif;font-size:3rem;font-weight:800;color:var(--blue)}
+.battery-score .score-label{font-size:0.85rem;color:var(--ink-light)}
+
+/* Smart Check */
+.smart-grid{display:grid;gap:12px}
+.smart-item{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;background:var(--bg);border-radius:10px}
+.smart-badge{flex-shrink:0;width:32px;height:32px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.8rem}
+.smart-content{flex:1}
+.smart-content strong{display:block;font-size:0.85rem;margin-bottom:2px}
+.smart-content p{font-size:0.82rem;color:var(--ink-light)}
+
+/* Dashboard */
+.dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-bottom:32px}
+.stat-card{background:var(--card);border-radius:var(--radius);padding:24px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.stat-card .stat-value{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:800;color:var(--blue)}
+.stat-card .stat-label{font-size:0.82rem;color:var(--ink-muted);margin-top:4px}
+.course-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.course-card{background:var(--card);border-radius:var(--radius);padding:20px;border:1px solid var(--border);box-shadow:var(--shadow);cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.course-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.1)}
+.course-card .course-icon{font-size:2rem;margin-bottom:12px}
+.course-card h4{font-size:1rem;margin-bottom:4px}
+.course-card p{font-size:0.8rem;color:var(--ink-muted)}
+.course-card .course-progress{margin-top:14px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.course-card .course-progress-fill{height:100%;background:var(--success);border-radius:2px;transition:width .5s}
+
+/* Responsive */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main-content{margin-left:0;padding:80px 20px 32px}
+  .mobile-header{display:flex}
+  .auth-card{padding:32px 24px}
+  .page-header h1{font-size:1.6rem}
+  .likert-row{flex-direction:column;align-items:flex-start}
+  .dashboard-grid{grid-template-columns:1fr}
+}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn .4s ease forwards}
+.exercise-card{animation:fadeIn .4s ease forwards}
+.exercise-card:nth-child(2){animation-delay:.05s}
+.exercise-card:nth-child(3){animation-delay:.1s}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// =========== STORAGE LAYER ===========
+const DB_NAME = 'ForwardWorkbook';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains('users')) d.createObjectStore('users', { keyPath: 'email' });
+      if (!d.objectStoreNames.contains('progress')) d.createObjectStore('progress', { keyPath: 'id' });
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbPut(store, data) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readwrite');
+    tx.objectStore(store).put(data);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function dbGet(store, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function dbGetAll(store) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, 'readonly');
+    const req = tx.objectStore(store).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// =========== APP STATE ===========
+let state = {
+  user: null,
+  currentPage: 'dashboard',
+  progress: {},
+  sidebarOpen: false
+};
+
+const COURSES = [
+  { id: 'intro', name: 'Introducción', icon: '🚀', exercises: ['ex1','ex2'] },
+  { id: 'skills', name: 'Reflexión sobre Habilidades', icon: '📊', exercises: ['ex_skills'] },
+  { id: 'adaptability', name: 'Adaptabilidad y Resiliencia', icon: '🤝', exercises: ['ex3','ex4','ex5'] },
+  { id: 'problem', name: 'Resolución de Problemas', icon: '🧩', exercises: ['ex6','ex7','ex8','ex_smart','ex_case'] },
+  { id: 'communication', name: 'Comunicar para Generar Impacto', icon: '💬', exercises: ['ex9','ex10','ex_pyramid','ex11'] },
+  { id: 'wellbeing', name: 'Relaciones y Bienestar', icon: '💚', exercises: ['ex12','ex_recovery'] },
+  { id: 'digital', name: 'Kit de Herramientas Digitales', icon: '🤖', exercises: ['ex13','ex14','ex15','ex16','ex17','ex18'] },
+];
+
+const EXERCISES = {
+  ex1: { title: 'Ejercicio #1: Reflexiona sobre el viaje', questions: [
+    { id: 'ex1_opportunity', label: '¿En qué oportunidad estás trabajando?', placeholder: 'Describe la oportunidad profesional o personal...' },
+    { id: 'ex1_goals', label: '¿Cuáles son tus objetivos para este programa?', placeholder: 'Escribe tus objetivos principales...' },
+    { id: 'ex1_help', label: '¿Qué podría ayudarte a lograrlo?', placeholder: 'Recursos, personas, hábitos...' },
+    { id: 'ex1_excited', label: '¿Qué es lo que más te entusiasma?', placeholder: 'Lo que más te motiva del programa...' },
+  ]},
+  ex2: { title: 'Ejercicio #2: Habilidades esenciales para ti', questions: [
+    { id: 'ex2_skills', label: '¿Cuáles crees que son las tres habilidades más importantes para tu carrera?', placeholder: 'Identifica y explica las 3 habilidades clave...', tall: true },
+  ]},
+  ex_skills: { title: 'Reflexión sobre Habilidades', type: 'likert', items: [
+    { id: 'sk_adapt1', label: 'En una situación difícil, soy consciente de lo que pienso y siento, y trato de adaptarme' },
+    { id: 'sk_adapt2', label: 'Aprovecho oportunidades de aprender fuera de mi zona de confort' },
+    { id: 'sk_prob1', label: 'Defino y divido los problemas en partes antes de resolverlos' },
+    { id: 'sk_prob2', label: 'Me baso en análisis y presento una síntesis de perspectivas' },
+    { id: 'sk_comm1', label: 'Empiezo con mi mensaje más importante y luego doy detalles' },
+    { id: 'sk_comm2', label: 'Analizo a mi audiencia y adapto el mensaje en consecuencia' },
+    { id: 'sk_dig1', label: 'Busco proactivamente oportunidades en datos, tecnología e IA' },
+    { id: 'sk_rel1', label: 'Creo un entorno de equipo donde las personas se sienten escuchadas' },
+    { id: 'sk_rel2', label: 'Evalúo mi bienestar e intento mejorarlo con nuevos hábitos' },
+    { id: 'sk_rel3', label: 'Desarrollo relaciones con colegas siendo atento, vulnerable y empático' },
+  ]},
+  ex3: { title: 'Ejercicio #3: Intención de aprendizaje', questions: [
+    { id: 'ex3_intention', label: '¿Cuál es tu intención de aprendizaje para este programa?', placeholder: 'Desarrolla tu intención considerando conexión con el significado y enfoque en el recorrido...', tall: true },
+  ]},
+  ex4: { title: 'Ejercicio #4: Mentalidades adaptables y resilientes', questions: [
+    { id: 'ex4_reflect', label: '¿Con qué frecuencia has mantenido una mentalidad adaptable y resiliente en la última semana?', placeholder: 'Reflexiona sobre situaciones específicas...' },
+    { id: 'ex4_change', label: '¿Qué podrías haber hecho de otra manera para cambiar tu mentalidad?', placeholder: 'Acciones concretas que pudiste tomar...' },
+  ]},
+  ex5: { title: 'Ejercicio #5: Tu plan de hábitos (Ciclo de hábitos)', questions: [
+    { id: 'ex5_behavior', label: '¿En qué comportamiento te enfocarás?', placeholder: 'El comportamiento que quieres convertir en hábito...' },
+    { id: 'ex5_signal', label: '¿Qué señal indicará que practicas tu hábito?', placeholder: 'Recordatorio electrónico, nota física, reunión...' },
+    { id: 'ex5_routine', label: '¿Cómo será el hábito en acción (rutina)?', placeholder: 'Los pasos específicos...' },
+    { id: 'ex5_reward', label: '¿Qué recompensa te hará sentir bien?', placeholder: 'Recompensa física, mental o emocional...' },
+    { id: 'ex5_why', label: '¿Por qué este hábito es importante para ti?', placeholder: 'Tu motivación personal...' },
+    { id: 'ex5_unlearn', label: '¿Qué podrías necesitar desaprender?', placeholder: 'Hábitos o creencias que debes dejar atrás...' },
+  ]},
+  ex6: { title: 'Ejercicio #6: Tu enfoque para resolver problemas', questions: [
+    { id: 'ex6_approach', label: 'Describe tu enfoque personal para resolver problemas. ¿Eres estructurado o intuitivo?', placeholder: 'Reflexiona sobre tu estilo actual...', tall: true },
+    { id: 'ex6_structured', label: '¿Cómo puedes adoptar un enfoque más estructurado?', placeholder: 'Pasos concretos para mejorar...' },
+  ]},
+  ex7: { title: 'Ejercicio #7: ¿Cómo defines los problemas?', questions: [
+    { id: 'ex7_define', label: '¿Sueles darte tiempo para definir un problema antes de resolverlo? ¿Cuál es tu proceso?', placeholder: 'Describe tu proceso actual de definición de problemas...', tall: true },
+  ]},
+  ex8: { title: 'Ejercicio #8: Integrar lo que has aprendido', questions: [
+    { id: 'ex8_added', label: '¿Qué has agregado a tu enfoque?', placeholder: 'Nuevas herramientas y técnicas...' },
+    { id: 'ex8_new', label: '¿Qué nuevos pasos te gustaría integrar en la definición de problemas?', placeholder: 'Pasos, herramientas, técnicas...' },
+    { id: 'ex8_excited', label: '¿Qué es lo que más te emociona probar en el trabajo?', placeholder: 'Lo que quieres poner en práctica...' },
+  ]},
+  ex_smart: { title: 'Definición SMART del problema', type: 'smart', questions: [
+    { id: 'smart_problem', label: 'Pregunta problema (comenzando con "¿Cómo puede...")', placeholder: '¿Cómo puede la ciudad de Hustleton...?' },
+    { id: 'smart_s', label: '¿Es específico?', placeholder: '¿Es lo suficientemente enfocado?' },
+    { id: 'smart_m', label: '¿Es medible?', placeholder: '¿Se puede cuantificar con alguna métrica?' },
+    { id: 'smart_a', label: '¿Es alcanzable?', placeholder: '¿Está claro qué acciones hay que llevar a cabo?' },
+    { id: 'smart_r', label: '¿Es pertinente?', placeholder: '¿Es relevante para las partes interesadas?' },
+    { id: 'smart_t', label: '¿Tiene plazo temporal?', placeholder: '¿Cuándo se debe resolver?' },
+  ]},
+  ex_case: { title: 'Hoja de Planteamiento del Problema', questions: [
+    { id: 'case_question', label: 'Pregunta problema', placeholder: 'Define de manera concisa lo que se debe resolver (SMART)...' },
+    { id: 'case_scope', label: 'Alcance del espacio para la solución', placeholder: '¿Qué se considerará y qué no?' },
+    { id: 'case_constraints', label: 'Restricciones', placeholder: '¿Qué puede o no puede suceder?' },
+    { id: 'case_stakeholders', label: 'Partes interesadas', placeholder: 'Actores principales...' },
+    { id: 'case_context', label: 'Contexto', placeholder: 'Entorno que rodea al problema...' },
+    { id: 'case_sources', label: 'Fuentes clave de perspectiva', placeholder: '¿Dónde buscarás información?' },
+    { id: 'case_success', label: 'Criterios para el éxito', placeholder: '¿Qué debe suceder para que la solución tenga éxito?' },
+  ]},
+  ex9: { title: 'Ejercicio #9: Reflexión sobre interacción pasada (Empatía)', questions: [
+    { id: 'ex9_context', label: '¿Cuál fue el contexto?', placeholder: 'Describe la situación...' },
+    { id: 'ex9_feelings', label: '¿Cómo crees que se sentían tus colegas?', placeholder: 'Sus posibles emociones al iniciar...' },
+    { id: 'ex9_stakes', label: '¿Qué estaba en juego para tus colegas?', placeholder: 'Lo que era importante para ellos...' },
+    { id: 'ex9_empathy', label: '¿Hubo empatía? ¿Cómo? ¿Cuáles fueron las consecuencias?', placeholder: 'Reflexiona sobre la presencia o ausencia de empatía...' },
+  ]},
+  ex10: { title: 'Ejercicio #10: Reflexión sobre Propósito', questions: [
+    { id: 'ex10_clear', label: '¿Fuiste claro con respecto al propósito?', placeholder: 'Describe el propósito de la interacción...' },
+    { id: 'ex10_shared', label: '¿Fue un propósito compartido? ¿Cómo?', placeholder: 'Reflexiona sobre si fue compartido...' },
+    { id: 'ex10_different', label: '¿Qué podrías haber hecho de manera diferente?', placeholder: 'Cambios que mejorarían el resultado...' },
+  ]},
+  ex_pyramid: { title: 'Principio de la Pirámide', questions: [
+    { id: 'pyr_dominant', label: '¿Cuál es tu idea dominante y por qué?', placeholder: 'La conclusión clave que la audiencia debe escuchar...' },
+    { id: 'pyr_arguments', label: '¿Cuáles son los argumentos que respaldan la idea dominante?', placeholder: '3-5 planteamientos clave de una línea...' },
+    { id: 'pyr_action', label: '¿Cuál es tu llamado a la acción y por qué?', placeholder: 'Lo que quieres que haga tu audiencia...' },
+  ]},
+  ex11: { title: 'Ejercicio #11: Reflexión sobre facilitación', questions: [
+    { id: 'ex11_open', label: '¿La reunión tuvo una apertura clara y convincente?', placeholder: 'Qué hizo el facilitador para que se sintieran cómodos...' },
+    { id: 'ex11_focus', label: '¿Se hicieron preguntas para enfocar la conversación?', placeholder: 'Cómo se mantuvo focalizado el pensamiento...' },
+    { id: 'ex11_close', label: '¿Se concluyó con un resultado claro y próximos pasos?', placeholder: 'Definición de responsables y plazos...' },
+    { id: 'ex11_consensus', label: '¿Se impulsó al grupo hacia un consenso o acción?', placeholder: 'Cómo se logró (o no) el consenso...' },
+  ]},
+  ex12: { title: 'Ejercicio #12: Evaluar tu batería de bienestar', type: 'battery', items: [
+    'Dormí muy bien anoche',
+    'Tengo intenciones claras y concretas para el día',
+    'Espero con ansias las actividades del día',
+    'Soy optimista sobre mi futuro',
+    'Siento mucho vigor y energía',
+    'Mi dieta es saludable y equilibrada',
+    'Siento muy poca fatiga o agotamiento',
+    'Puedo enfocarme en las cosas que más me importan',
+    'Me siento conectado(a) con las personas importantes en mi vida',
+  ]},
+  ex_recovery: { title: 'Plan de recuperación de bienestar', questions: [
+    { id: 'rec_morning', label: 'Mañana', placeholder: '¿Qué harás en la mañana para tu bienestar?' },
+    { id: 'rec_afternoon', label: 'Tarde', placeholder: '¿Qué harás en la tarde?' },
+    { id: 'rec_evening', label: 'Noche', placeholder: '¿Qué harás en la noche?' },
+    { id: 'rec_sleep', label: 'Al ir a dormir', placeholder: '¿Qué rutina seguirás al dormir?' },
+  ]},
+  ex13: { title: 'Ejercicio #13: Impacto de la tecnología digital', questions: [
+    { id: 'ex13_tech', label: '¿Qué nueva aplicación o servicio digital has comenzado a utilizar? ¿Qué impacto ha tenido?', placeholder: 'Describe la herramienta y su impacto en tu vida...', tall: true },
+  ]},
+  ex14: { title: 'Ejercicio #14: Mentalidad sobre Gen IA', type: 'likert_4', items: [
+    { id: 'ai_curiosity', label: 'Curiosidad: El impacto de GenAI me genera curiosidad y uso herramientas para elevar mi productividad' },
+    { id: 'ai_responsibility', label: 'Responsabilidad: Utilizo contenidos generados con IA de manera ética y soy consciente de mi responsabilidad' },
+    { id: 'ai_adaptability', label: 'Adaptabilidad: Me estoy adaptando al espacio de GenAI y busco mejorar mis conocimientos' },
+    { id: 'ai_human', label: 'Pensamiento centrado en el ser humano: Utilizo GenAI como herramienta colaborativa sin reemplazar mi valor' },
+  ]},
+  ex15: { title: 'Ejercicio #15: Gen IA con el marco 4C', questions: [
+    { id: 'ex15_concision', label: 'Concisión: Resumir información, interpretar datos', placeholder: 'Puedo intentar utilizar GenAI para hacer ______, de modo que pueda _______' },
+    { id: 'ex15_content', label: 'Generación de Contenidos: Crear texto, imágenes o video', placeholder: 'Puedo intentar utilizar GenAI para hacer ______, de modo que pueda _______' },
+    { id: 'ex15_code', label: 'Codificación y software: Crear o transformar código', placeholder: 'Puedo intentar utilizar GenAI para hacer ______, de modo que pueda _______' },
+    { id: 'ex15_client', label: 'Interacción con Clientes: Personalizar la interacción', placeholder: 'Puedo intentar utilizar GenAI para hacer ______, de modo que pueda _______' },
+  ]},
+  ex16: { title: 'Ejercicio #16: Campeón de Gen IA', questions: [
+    { id: 'ex16_self', label: 'Yo mismo/a (liderar con el ejemplo)', placeholder: 'Una acción concreta para el próximo mes...' },
+    { id: 'ex16_team', label: 'Equipo (influir sobre los colegas)', placeholder: 'Una acción para fomentar el uso responsable...' },
+    { id: 'ex16_org', label: 'Organización (influir en la cultura)', placeholder: 'Una acción a escala organizacional...' },
+    { id: 'ex16_society', label: 'Sociedad (contribuir al ecosistema)', placeholder: 'Una acción para impacto positivo...' },
+  ]},
+  ex17: { title: 'Ejercicio #17: Plan de aprendizaje Gen IA', questions: [
+    { id: 'ex17_experiment', label: 'Experimentaré con herramientas diferentes como...', placeholder: 'Herramientas que quieres explorar...' },
+    { id: 'ex17_use', label: 'Utilizaré GenAI en mi trabajo y vida personal para...', placeholder: 'Aplicaciones concretas...' },
+    { id: 'ex17_knowledge', label: 'Aumentaré mis conocimientos actuales con...', placeholder: 'Cursos, libros, comunidades...' },
+  ]},
+  ex18: { title: 'Ejercicio #18: Tu kit de herramientas digitales', questions: [
+    { id: 'ex18_expanded', label: '¿De qué manera han expandido sus conocimientos de datos, tecnología o nuevas formas de trabajar?', placeholder: 'Lo que has aprendido hasta ahora...' },
+    { id: 'ex18_obstacle', label: 'Un obstáculo que enfrentes para comprender o actuar en cada área', placeholder: 'Barreras actuales...' },
+    { id: 'ex18_actions', label: 'Acciones específicas para aumentar habilidades en los 3 elementos', placeholder: 'Acciones concretas...' },
+    { id: 'ex18_priority', label: 'Prioriza una acción en cada área para comenzar inmediatamente', placeholder: 'Lo más urgente...' },
+  ]},
+};
+
+// =========== HELPER FUNCTIONS ===========
+function getProgressKey(userEmail, fieldId) {
+  return `${userEmail}__${fieldId}`;
+}
+
+async function saveField(fieldId, value) {
+  if (!state.user) return;
+  const key = getProgressKey(state.user.email, fieldId);
+  state.progress[fieldId] = value;
+  await dbPut('progress', { id: key, email: state.user.email, field: fieldId, value, updatedAt: Date.now() });
+}
+
+async function loadAllProgress() {
+  if (!state.user) return;
+  const all = await dbGetAll('progress');
+  state.progress = {};
+  all.filter(p => p.email === state.user.email).forEach(p => {
+    state.progress[p.field] = p.value;
+  });
+}
+
+function getExerciseCompletion(exerciseId) {
+  const ex = EXERCISES[exerciseId];
+  if (!ex) return 0;
+  if (ex.type === 'likert' || ex.type === 'likert_4') {
+    const answered = ex.items.filter(it => state.progress[it.id]).length;
+    return answered / ex.items.length;
+  }
+  if (ex.type === 'battery') {
+    const checked = ex.items.filter((_, i) => state.progress[`battery_${i}`]).length;
+    return checked > 0 ? 1 : 0;
+  }
+  const fields = ex.questions.map(q => q.id);
+  const filled = fields.filter(f => state.progress[f] && state.progress[f].trim().length > 0).length;
+  return filled / fields.length;
+}
+
+function getCourseCompletion(courseId) {
+  const course = COURSES.find(c => c.id === courseId);
+  if (!course) return 0;
+  const completions = course.exercises.map(e => getExerciseCompletion(e));
+  return completions.reduce((a, b) => a + b, 0) / completions.length;
+}
+
+function getTotalCompletion() {
+  const all = COURSES.flatMap(c => c.exercises).map(e => getExerciseCompletion(e));
+  return all.reduce((a, b) => a + b, 0) / all.length;
+}
+
+// =========== RENDER ENGINE ===========
+function render() {
+  const app = document.getElementById('app');
+  if (!state.user) {
+    app.innerHTML = renderAuth();
+    bindAuth();
+  } else {
+    app.innerHTML = renderApp();
+    bindApp();
+  }
+}
+
+function renderAuth() {
+  return `
+    <div class="auth-screen">
+      <div class="auth-card">
+        <div class="auth-brand">
+          <h1>Forward</h1>
+          <p>Mi Cuaderno de Aprendizaje</p>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
+          <button class="auth-tab" data-tab="register">Registrarse</button>
+        </div>
+        <div class="auth-error" id="authError"></div>
+        <div id="authForm">
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="authEmail" placeholder="tu@email.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="form-group" id="nameGroup" style="display:none">
+            <label>Nombre completo</label>
+            <input type="text" id="authName" placeholder="Tu nombre" autocomplete="name">
+          </div>
+          <button class="auth-btn" id="authSubmit">Iniciar Sesión</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderApp() {
+  const total = Math.round(getTotalCompletion() * 100);
+  const initials = state.user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  
+  return `
+    <div class="mobile-header">
+      <button class="hamburger" id="menuBtn">☰</button>
+      <span style="font-weight:600">Forward</span>
+      <span></span>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <h2>Forward</h2>
+          <span>Cuaderno de Aprendizaje</span>
+        </div>
+        <div class="sidebar-progress">
+          <div class="progress-label">
+            <span>Progreso total</span>
+            <span>${total}%</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" style="width:${total}%"></div>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <div class="nav-item ${state.currentPage === 'dashboard' ? 'active' : ''}" data-page="dashboard">
+            <span class="nav-dot ${total > 0 ? 'current' : ''}"></span>
+            Panel Principal
+          </div>
+          ${COURSES.map(c => {
+            const comp = getCourseCompletion(c.id);
+            const dotClass = comp >= 1 ? 'done' : comp > 0 ? 'current' : '';
+            return `<div class="nav-item ${state.currentPage === c.id ? 'active' : ''}" data-page="${c.id}">
+              <span class="nav-dot ${dotClass}"></span>
+              ${c.name}
+            </div>`;
+          }).join('')}
+        </nav>
+        <div class="sidebar-user">
+          <div class="user-avatar">${initials}</div>
+          <div class="user-info">
+            <p>${state.user.name}</p>
+            <span>${state.user.email}</span>
+          </div>
+          <button class="logout-btn" id="logoutBtn" title="Cerrar sesión">⏻</button>
+        </div>
+      </aside>
+      <main class="main-content">
+        ${state.currentPage === 'dashboard' ? renderDashboard() : renderCourse(state.currentPage)}
+      </main>
+    </div>`;
+}
+
+function renderDashboard() {
+  const total = Math.round(getTotalCompletion() * 100);
+  const completedExercises = COURSES.flatMap(c => c.exercises).filter(e => getExerciseCompletion(e) >= 1).length;
+  const totalExercises = COURSES.flatMap(c => c.exercises).length;
+  
+  return `
+    <div class="page-header fade-in">
+      <p class="breadcrumb">Panel Principal</p>
+      <h1>Bienvenido(a), ${state.user.name.split(' ')[0]}</h1>
+      <p>Continúa tu viaje de aprendizaje Forward. Selecciona un curso para trabajar en tus ejercicios.</p>
+    </div>
+    <div class="dashboard-grid">
+      <div class="stat-card fade-in">
+        <div class="stat-value">${total}%</div>
+        <div class="stat-label">Progreso general</div>
+      </div>
+      <div class="stat-card fade-in">
+        <div class="stat-value">${completedExercises}/${totalExercises}</div>
+        <div class="stat-label">Ejercicios completados</div>
+      </div>
+      <div class="stat-card fade-in">
+        <div class="stat-value">${COURSES.filter(c => getCourseCompletion(c.id) >= 1).length}/${COURSES.length}</div>
+        <div class="stat-label">Cursos finalizados</div>
+      </div>
+    </div>
+    <h2 style="margin-bottom:16px;font-size:1.3rem">Tus Cursos</h2>
+    <div class="course-cards">
+      ${COURSES.map(c => {
+        const comp = Math.round(getCourseCompletion(c.id) * 100);
+        return `<div class="course-card fade-in" data-page="${c.id}">
+          <div class="course-icon">${c.icon}</div>
+          <h4>${c.name}</h4>
+          <p>${c.exercises.length} ejercicio${c.exercises.length > 1 ? 's' : ''}</p>
+          <div class="course-progress"><div class="course-progress-fill" style="width:${comp}%"></div></div>
+          <p style="font-size:0.75rem;color:var(--ink-muted);margin-top:6px">${comp}% completado</p>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderCourse(courseId) {
+  const course = COURSES.find(c => c.id === courseId);
+  if (!course) return '<p>Curso no encontrado</p>';
+  const comp = Math.round(getCourseCompletion(courseId) * 100);
+  
+  return `
+    <div class="page-header fade-in">
+      <p class="breadcrumb">Panel Principal → ${course.name}</p>
+      <h1>${course.icon} ${course.name}</h1>
+      <p>Progreso: ${comp}% completado</p>
+    </div>
+    ${course.exercises.map(exId => renderExercise(exId)).join('')}`;
+}
+
+function renderExercise(exId) {
+  const ex = EXERCISES[exId];
+  if (!ex) return '';
+  const comp = getExerciseCompletion(exId);
+  const savedClass = comp >= 1 ? 'saved' : '';
+  
+  if (ex.type === 'likert' || ex.type === 'likert_4') {
+    return renderLikert(ex, savedClass);
+  }
+  if (ex.type === 'battery') {
+    return renderBattery(ex, savedClass);
+  }
+  if (ex.type === 'smart') {
+    return renderSmart(ex, savedClass);
+  }
+  
+  return `
+    <div class="exercise-card ${savedClass} fade-in">
+      <h3>${ex.title}</h3>
+      ${comp >= 1 ? '<div class="save-indicator saved"><svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg> Completado</div>' : ''}
+      ${ex.questions.map(q => `
+        <div style="margin-bottom:18px">
+          <label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:8px;color:var(--ink)">${q.label}</label>
+          <textarea 
+            data-field="${q.id}" 
+            placeholder="${q.placeholder || ''}"
+            style="${q.tall ? 'min-height:180px' : ''}"
+          >${state.progress[q.id] || ''}</textarea>
+          <div class="save-indicator" id="indicator_${q.id}">Guardado automáticamente</div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function renderLikert(ex, savedClass) {
+  const labels = ['Nunca', 'Rara vez', 'A veces', 'A menudo', 'Siempre'];
+  const labels4 = ['Totalmente en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Totalmente de acuerdo'];
+  const isLikert4 = ex.type === 'likert_4';
+  const scale = isLikert4 ? labels4 : labels;
+  
+  return `
+    <div class="exercise-card ${savedClass} fade-in">
+      <h3>${ex.title}</h3>
+      <p class="exercise-desc">Selecciona la opción que mejor refleja tu comportamiento o perspectiva.</p>
+      <div class="likert-legend">
+        <span>${scale[0]}</span>
+        <span>${scale[scale.length - 1]}</span>
+      </div>
+      <div class="likert-grid">
+        ${ex.items.map(item => `
+          <div class="likert-row">
+            <div class="likert-label">${item.label}</div>
+            <div class="likert-options">
+              ${[1,2,3,4,5].map(v => `
+                <div class="likert-opt ${state.progress[item.id] == v ? 'selected' : ''}" 
+                     data-likert="${item.id}" data-value="${v}">${v}</div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+}
+
+function renderBattery(ex, savedClass) {
+  const checked = ex.items.filter((_, i) => state.progress[`battery_${i}`]).length;
+  const scoreText = checked <= 3 ? 'Tu batería está vacía' : checked <= 5 ? 'Tu batería se está agotando' : checked <= 7 ? 'Te vendría bien carga extra' : 'Tu batería está totalmente cargada';
+  
+  return `
+    <div class="exercise-card ${savedClass} fade-in">
+      <h3>${ex.title}</h3>
+      <p class="exercise-desc">Marca las afirmaciones que sean verdaderas para ti hoy.</p>
+      <div class="battery-grid">
+        ${ex.items.map((item, i) => `
+          <div class="battery-item ${state.progress[`battery_${i}`] ? 'checked' : ''}" data-battery="${i}">
+            <div class="battery-check">${state.progress[`battery_${i}`] ? '✓' : ''}</div>
+            <div class="battery-text">${item}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="battery-score">
+        <div class="score">${checked}/9</div>
+        <div class="score-label">${scoreText}</div>
+      </div>
+    </div>`;
+}
+
+function renderSmart(ex, savedClass) {
+  const badges = ['S','M','A','R','T'];
+  return `
+    <div class="exercise-card ${savedClass} fade-in">
+      <h3>${ex.title}</h3>
+      <p class="exercise-desc">Define tu problema usando el marco SMART y verifica cada criterio.</p>
+      ${ex.questions.map((q, i) => `
+        <div style="margin-bottom:18px">
+          ${i > 0 ? `<div class="smart-item" style="margin-bottom:8px">
+            <div class="smart-badge">${badges[i-1]}</div>
+            <div class="smart-content"><strong>${q.label}</strong></div>
+          </div>` : `<label style="display:block;font-size:0.88rem;font-weight:600;margin-bottom:8px">${q.label}</label>`}
+          <textarea data-field="${q.id}" placeholder="${q.placeholder || ''}" style="min-height:80px">${state.progress[q.id] || ''}</textarea>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+// =========== BINDINGS ===========
+let authMode = 'login';
+let saveTimers = {};
+
+function bindAuth() {
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      authMode = tab.dataset.tab;
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('nameGroup').style.display = authMode === 'register' ? 'block' : 'none';
+      document.getElementById('authSubmit').textContent = authMode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta';
+      document.getElementById('authError').classList.remove('show');
+    });
+  });
+
+  document.getElementById('authSubmit').addEventListener('click', async () => {
+    const email = document.getElementById('authEmail').value.trim().toLowerCase();
+    const password = document.getElementById('authPassword').value;
+    const errEl = document.getElementById('authError');
+    
+    if (!email || !password) {
+      errEl.textContent = 'Por favor completa todos los campos.';
+      errEl.classList.add('show');
+      return;
+    }
+
+    if (authMode === 'register') {
+      const name = document.getElementById('authName').value.trim();
+      if (!name) { errEl.textContent = 'Por favor ingresa tu nombre.'; errEl.classList.add('show'); return; }
+      const existing = await dbGet('users', email);
+      if (existing) { errEl.textContent = 'Este correo ya está registrado.'; errEl.classList.add('show'); return; }
+      const user = { email, name, password: btoa(password), createdAt: Date.now() };
+      await dbPut('users', user);
+      state.user = { email, name };
+      localStorage.setItem('fw_session', JSON.stringify(state.user));
+      await loadAllProgress();
+      render();
+    } else {
+      const user = await dbGet('users', email);
+      if (!user || atob(user.password) !== password) {
+        errEl.textContent = 'Correo o contraseña incorrectos.';
+        errEl.classList.add('show');
+        return;
+      }
+      state.user = { email: user.email, name: user.name };
+      localStorage.setItem('fw_session', JSON.stringify(state.user));
+      await loadAllProgress();
+      render();
+    }
+  });
+
+  // Enter key
+  document.querySelectorAll('#authForm input').forEach(inp => {
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') document.getElementById('authSubmit').click(); });
+  });
+}
+
+function bindApp() {
+  // Navigation
+  document.querySelectorAll('[data-page]').forEach(el => {
+    el.addEventListener('click', () => {
+      state.currentPage = el.dataset.page;
+      state.sidebarOpen = false;
+      render();
+      window.scrollTo(0, 0);
+    });
+  });
+
+  // Mobile menu
+  const menuBtn = document.getElementById('menuBtn');
+  const overlay = document.getElementById('overlay');
+  const sidebar = document.getElementById('sidebar');
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('show');
+    });
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    });
+  }
+
+  // Logout
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      state.user = null;
+      state.progress = {};
+      localStorage.removeItem('fw_session');
+      render();
+    });
+  }
+
+  // Textareas - autosave
+  document.querySelectorAll('textarea[data-field]').forEach(ta => {
+    ta.addEventListener('input', () => {
+      const field = ta.dataset.field;
+      if (saveTimers[field]) clearTimeout(saveTimers[field]);
+      const indicator = document.getElementById(`indicator_${field}`);
+      if (indicator) { indicator.textContent = 'Guardando...'; indicator.classList.remove('saved'); }
+      saveTimers[field] = setTimeout(async () => {
+        await saveField(field, ta.value);
+        if (indicator) { 
+          indicator.innerHTML = '<svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg> Guardado'; 
+          indicator.classList.add('saved'); 
+        }
+      }, 600);
+    });
+  });
+
+  // Likert
+  document.querySelectorAll('[data-likert]').forEach(opt => {
+    opt.addEventListener('click', async () => {
+      const field = opt.dataset.likert;
+      const value = opt.dataset.value;
+      await saveField(field, value);
+      // Re-render just the options for this item
+      opt.parentElement.querySelectorAll('.likert-opt').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+    });
+  });
+
+  // Battery
+  document.querySelectorAll('[data-battery]').forEach(item => {
+    item.addEventListener('click', async () => {
+      const idx = item.dataset.battery;
+      const field = `battery_${idx}`;
+      const newVal = !state.progress[field];
+      await saveField(field, newVal ? true : '');
+      render();
+    });
+  });
+}
+
+// =========== INIT ===========
+async function init() {
+  await openDB();
+  const session = localStorage.getItem('fw_session');
+  if (session) {
+    try {
+      const parsed = JSON.parse(session);
+      const user = await dbGet('users', parsed.email);
+      if (user) {
+        state.user = { email: user.email, name: user.name };
+        await loadAllProgress();
+      }
+    } catch(e) {
+      localStorage.removeItem('fw_session');
+    }
+  }
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
