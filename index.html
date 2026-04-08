@@ -417,6 +417,7 @@ function getTotalCompletion() {
 function render() {
   const app = document.getElementById('app');
   if (!state.user) {
+    authMode = 'login';
     app.innerHTML = renderAuth();
     bindAuth();
   } else {
